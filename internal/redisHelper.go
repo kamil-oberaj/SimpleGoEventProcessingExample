@@ -10,9 +10,7 @@ import (
 )
 
 func PingOrPanic(s *types.Server) {
-	if s.Rdb == nil {
-		panic("Redis client is nil")
-	}
+	checkServer(s)
 
 	pong, err := s.Rdb.Ping(s.Ctx).Result()
 	HandleError(err, "Failed to ping Redis")
@@ -29,13 +27,7 @@ func NewRedisClient(url, password string, db int) *redis.Client {
 }
 
 func SavePerson(s *types.Server, person *types.Person) {
-	if s.Rdb == nil {
-		log.Panicf("Redis connection is nil")
-	}
-
-	if s.Ctx == nil {
-		log.Panicf("Context is nil")
-	}
+	checkServer(s)
 
 	key := fmt.Sprintf("person:%s", person.ID)
 	value, err := json.Marshal(person)
@@ -48,13 +40,7 @@ func SavePerson(s *types.Server, person *types.Person) {
 }
 
 func GetPerson(s *types.Server, id uuid.UUID) *types.Person {
-	if s.Rdb == nil {
-		log.Panicf("Redis connection is nil")
-	}
-
-	if s.Ctx == nil {
-		log.Panicf("Context is nil")
-	}
+	checkServer(s)
 
 	key := createKey(id)
 	value, err := s.Rdb.Get(s.Ctx, key).Result()
@@ -69,13 +55,7 @@ func GetPerson(s *types.Server, id uuid.UUID) *types.Person {
 }
 
 func RemovePerson(s *types.Server, id uuid.UUID) {
-	if s.Rdb == nil {
-		log.Panicf("Redis connection is nil")
-	}
-
-	if s.Ctx == nil {
-		log.Panicf("Context is nil")
-	}
+	checkServer(s)
 
 	key := createKey(id)
 	err := s.Rdb.Del(s.Ctx, key).Err()
@@ -86,4 +66,14 @@ func RemovePerson(s *types.Server, id uuid.UUID) {
 
 func createKey(id uuid.UUID) string {
 	return fmt.Sprintf("person:%s", id)
+}
+
+func checkServer(s *types.Server) {
+	if s.Rdb == nil {
+		log.Panicf("Redis connection is nil")
+	}
+
+	if s.Ctx == nil {
+		log.Panicf("Context is nil")
+	}
 }
